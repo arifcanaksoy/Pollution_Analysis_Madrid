@@ -1,0 +1,567 @@
+---
+title: "Analyzing Pollution Data in Madrid"
+author: "S2A"
+output:
+  html_document:
+      df_print: paged
+      fig_caption: yes
+      code_folding: show
+      theme: paper
+      toc: yes
+      toc_float: yes
+params:
+  path: '/Users/Can/Desktop/IE/R/groupwork/workgroup data'
+---
+
+<!-- CHECK FILES -->
+```{r check_files_eval, echo=FALSE, eval=TRUE}
+
+dates <- expand.grid(as.character(seq(1,12)),as.character(seq(11,16)))
+hourly_data <- paste0('hourly_data_',dates[,2],'_',dates[,1],'.csv')
+
+check_needed_files <- function(pwd) {
+  files <- gsub(pwd,"",list.files(pwd))
+  required_data_files <- c('parameters.png','weather.xlsx',hourly_data)
+  
+  if (!all(required_data_files %in% files)) {
+    print('This report works with multiple specific datasets')
+    print(paste0('The following file(s) are missing in ',pwd,'  :'))
+    missing_files<-setdiff(required_data_files, files)
+    for (x in missing_files) {
+      print(paste0('   ',x))
+    }
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+  print(failed)
+}
+
+pwd <- params$path
+failed <- check_needed_files(pwd)
+```
+
+<!-- ############## -->
+<!-- FAILED VERSION -->
+```{asis fail_text1, eval=failed}
+## Failed to Generate Report
+This report has two output versions, a failure and a success version, and this is the **failure** version. In order to build the analysis of this report, 74 specific files are needed, so before anything we must check that those files are in the specified directory.
+
+To dynamically display different outputs, the *eval* parameter of each code chunk is set to a conditional boolean variable that indicates if the chunk should be evaluated or not.
+
+To do so, the following function is ran at the beginning of this report (with its *echo* paramter set to *false*) to assign a boolean value to the *failed* variable:
+  
+<font size="1">
+The following code chunks' *eval* paramters are set to *false*, they are just used to display the code that ran at the begining.
+</font>
+\
+\
+```
+
+```{r check_files_not_eval1, echo=failed, eval=FALSE}
+dates <- expand.grid(as.character(seq(1,12)),as.character(seq(11,16)))
+hourly_data <- paste0('hourly_data_',dates[,2],'_',dates[,1],'.csv')
+```
+```{asis check_files_not_eval1_explained, eval=failed}
+These are some global variables that will be used in the report:
+
+* The variable *dates* is generating a data frame mapping the elements of the first sequence argument, which correspond to the months of a year, to the elements of the second sequence argument, which correspond to the years.
+
+* Paste0 is used as a vector-wise function that loops through each row of *dates*, concatenating strings and the column values of the row, creating a vector with the name of the files that contain hourly data of pollution per day from '2011-01-01' to '2016-12-31'.
+\
+\
+```
+
+```{r check_files_not_eval2, echo=failed, eval=FALSE}
+check_needed_files <- function(pwd) {
+  ... 
+}
+pwd <- params$path
+failed <- check_needed_files(pwd)
+```
+```{asis check_files_not_eval2_explained, eval=failed}
+The function *check_needed_files* is defined.
+
+The *pwd* variable is set to the directory specified in the parameters in the metadata of the file. It is a global variable that can be used throughout the entire script.
+
+The variable *failed* is set to the output returned by *check_needed_files*. **This global variable is the one used throughout the entire report as the boolean variable that indicates if a code chunk in the report should be evaluated or not. All output in this version has *eval=failed*, and *failed* has a value of *true*.**
+\
+\
+```
+
+```{r check_files_not_eval3, echo=failed, eval=FALSE}
+  files <- gsub(pwd,"",list.files(pwd))
+  required_data_files <- c('parameters.png','weather.xlsx',hourly_data)
+  
+  if (!all(required_data_files %in% files)) {
+    print('This report works with multiple specific datasets')
+    print(paste0('The following file(s) are missing in ',pwd,'  :'))
+    missing_files<-setdiff(required_data_files, files)
+    for (x in missing_files) {
+      print(paste0('   ',x))
+    }
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+  print(failed)
+```
+```{asis check_files_not_eval3_explained, eval=failed}
+This is the code inside the *check_needed_files* function.
+
+* The variable *files* is a list of strings that represent the files in *pwd*. *list.files* returns the absolute path to the file, which is removed from the string so the list contains only the name of the file.
+
+* The variable *required_data_files* is a vector of strings that represent the name of the files needed to generate the report.
+
+* The if statement is checking if the elements in the *required_data_files* vector are **not** in the *files* list. If at least one of them is missing, it enters the statement and prints an error message indicating which files are missing in the directory and return TRUE. It does so by doing a set difference to identify which are the files missing. 
+
+* If all elements in the *required_data_files* are in the *files* list the function returns false.
+\
+\
+```
+
+```{asis failure_version_text2, eval=failed}
+**All text in both versions of the report is displayed dynamically, based on the Boolean value of the *failed* variable, which indicates if all needed files were found in the directory. To do so, text is written in markdown syntax but inside a code chunk, rather than outside. This is done by setting the code chunk environment to "asis" rather than to "r", which outputs text as it is.**
+<br>
+<br>
+```
+
+<!-- ############### -->
+<!-- SUCCESS VERSION -->
+
+```{asis intro_text, eval=!failed}
+
+What follows is an analysis of pollution in Madrid. It uses hourly pollution data gathered at stations throughout Madrid during 72 consecutive months, from January 2011 until December 2016.
+
+The document is divided in 5 sections. They are listed below and are also accessible from the table of contents in the left margin of this document.
+
+  1. Package Install
+  2. Data Set Preperation
+  3. Data Analysis
+  4. Multiple Linear Regression
+  5. Conclusion
+
+Having read this document, the reader should, above all, understand the relationship among various pollutants—notably "NO2", "SO2","O3", and "PM2.5"—and their relationship with the weather. Moreover, the reader should understand how "NO2" is affected by changes in other variables.
+
+
+<font size="0.75">
+**Note**
+This report has two output versions, a failure and a success version, and this is the **success** version. In order to build the analysis of this report, 73 specific files are needed, so before anything we must check that those files are in the specified directory. The success version of this report does not include the code chunk that performs this task. The code of chunk that checks if all required files are in the specified directory is set to *echo=false, eval=true*. To dynamically display different outputs, the *eval* parameter of each code chunk is set to a conditional Boolean variable (calculated in the hidden code chunk) that indicates if the chunk should be evaluated or not.
+
+All text in both versions of the report is displayed dynamically, based on that same conditional Boolean variable that indicates if all needed files were found in the directory. To do so, text is written in markdown syntax but inside a code chunk, rather then outside. This is done by setting the code chunk environment to "asis" rather than to "r", which outputs text as it is.
+</font>
+\
+\
+```
+
+```{asis check_packages_title, eval=!failed}
+## Package Install
+
+Various packages were used alongside base R throughout this analysis. Here, a "for" loop is run to install packages that are not already installed and each of them are called up using the "library" function. Packages used include, 'lubridate', 'data.table', 'readr', 'readxl', 'ggplot2', 'plotly', 'reshape', 'corrplot', 'gridExtra', and 'sjPlot'.
+```
+```{r check_packages, message=FALSE, echo=!failed, eval=!failed}
+for (i in c('lubridate', 'data.table', 'readr', 'readxl','ggplot2','plotly','reshape', 'corrplot', 'gridExtra', 'sjPlot')){if(!i %in% installed.packages() == T){install.packages(i, repos = "http://cran.us.r-project.org")}}
+
+library(lubridate)
+library(data.table)
+library(readr)
+library(readxl)
+library(ggplot2)
+library(plotly)
+library(reshape)
+library(corrplot)
+library(gridExtra)
+library(sjPlot)
+
+```
+```{asis check_packages_explained, eval=!failed}
+<font size="1">
+**Note:** Code chunk enviornment variable *message* is set to false to avoid printing messages from loading the packages.
+</font>
+\
+\
+```
+
+```{asis prepare_dataset_title, eval=!failed}
+## Data Set Preperation
+
+The original data is not in an appropriate format for our analysis. The pollution data from each month has its own unique file and the weather data is in another file. In total, there are 73 files that need to be combined into a single data set in order to be analyzed.
+
+This section is split into various subsection, each with its own objective. Please read the intro to each section to understand the objective and the reasoning.
+```
+```{asis prepare_dataset, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset0_header, eval=!failed}
+### Global Variables
+
+Here, three variables are created in preperation for reading the 72 csv files related to pollution data. The chunk of code below is not evaluated, it merely displays the creation of these global variables. The purpose of each variable is described here:
+  
+* The **"dates"** variable generates a data frame mapping the elements of the first sequence argument, which correspond to the months of a year, to the elements of the second sequence argument, which correspond to the years.
+
+* The **"hourly_data"** variable is created using a "paste0" function, which concatenates the string, "hourly_data_", to each value in the second column of "date" (the year column), followed by the string "_", and finally by each value in the first column of "date" (the month column). The final output is a vector of strings of length 72, with the file names of each of the pollution files.
+
+* The **"pwd"** variable is set to the directory specified in the parameters in the metadata of the file. It is a global variable that can be used throughout the entire script.
+
+```
+```{r prepare_dataset0.1, echo=!failed, eval=!failed}
+dates <- expand.grid(as.character(seq(1,12)),as.character(seq(11,16)))
+hourly_data <- paste0('hourly_data_',dates[,2],'_',dates[,1],'.csv')
+pwd <- params$path
+```
+```{asis prepare_dataset0.2, eval=!failed}
+Below are outputs depicting the first six elements of "dates" and "hourly_data", and the "pwd".
+```
+```{r prepare_dataset0.3, echo=!failed, eval=!failed}
+head(dates)
+head(hourly_data)
+pwd
+```
+```{asis prepare_dataset0.4, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset1_header, eval=!failed}
+### Check Working Directory Path
+
+The code below is meant to ensure that the present working directory ends with a "/". The reason for doing so is that in order for the file names stored in "hourly_data" to be pasted at the end of the working directory path, allowing us to read in the files, there must be a "/" preceeding the file name.
+
+Simply put, the code uses an "if" statement to check the last character of the present working directory path. If it does not equal "/", then one is added.
+```
+```{r prepare_dataset1.1, echo=!failed, eval=!failed}
+if (substr(pwd, nchar(pwd), nchar(pwd)) != '/') {pwd <- paste0(pwd,'/')}
+```
+```{asis prepare_dataset1.2, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset2_header, eval=!failed}
+### Creating Single Pollution Data Set
+
+To read each of the 72 pollution in the most automated manner, (1) each data set is stored as an element in a list and (2) each element of the list is binded together by row. Both steps are described here.
+
+The chunk of code below uses the "lapply" function with an anonymous function to create a list called "list_all_hourly_dfs", filled with 72 dataframes. The "lapply" function takes "hourly_data" as its first argument, which is the vector of all 72 file names created above. The second argument passed to "lapply" is an anonymous function, which takes the "hourly_data" file names as "x" and performs the following:
+
+  1. Uses "paste0" to concatenate the present working directory path with each file name, establishing the exact location of each file;
+  2. Reads in the file as a dataframe;
+  3. Stores the file in an object called "df";
+  4. Creates a new column for month, filling it with the month value from the file name (Note: this is done by taking a substring of either the 16th character in the file name or both the 16th and the 17th, depending on the length of the file name, which is 21 characters for months October to December and 20 for the rest);
+  5. Creates a new column for year, filling it with a the year value from the file name, prefixed with "20" using the "paste0" function; and
+  6. Outputs the dataframe to be stored as an element in "list_all_hourly_dfs", before passing onto the next file.
+```
+```{r prepare_dataset2.1, echo=!failed, eval=!failed}
+list_all_hourly_dfs <- lapply(hourly_data, function(x) {
+  df <- as.data.frame(data.table::fread(paste0(pwd,x)))
+  df$month <- if(nchar(x) == 21) {as.numeric(substr(x, 16, 17))} else {as.numeric(substr(x, 16,16))}
+  df$year <- paste0("20",substr(x,13,14))
+  df
+  })
+```
+```{asis prepare_dataset2.2, eval=!failed}
+Having created a list of 72 dataframes, the "do.call" function is used to rbind each element of the list to the rest. Unlike "lapply", "do.call" is capable of holding all intermediate results until the function has been applied to every element of the list. Ultimately, this creates a single dataframe with nearly 6.5M observations, all of the pollution data, which is stored as "df_pollution".
+```
+```{r prepare_dataset2.3, echo=!failed, eval=!failed}
+df_pollution <- do.call(rbind,list_all_hourly_dfs)
+```
+```{asis prepare_dataset2.4, eval=!failed}
+Below are oututs that summarize the work above.
+```
+```{r prepare_dataset2.5, collapse=TRUE, eval=!failed}
+head(summary(list_all_hourly_dfs))
+tail(summary(list_all_hourly_dfs))
+head(list_all_hourly_dfs[[1]])
+is.data.frame(df_pollution)
+str(df_pollution)
+nrow(df_pollution)
+```
+```{asis prepare_dataset2.6, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset3_header, eval=!failed}
+### Identifiyng Specific Pollutants for Analysis
+
+The analysis focuses on four specific pollutants, "NO2", "SO2", "PM2.5", and "O3". Thus, the remaining pollutants must be removed from the dataset. To do this, the number that corresponds to each of the pollutants of interest must be used to subset "df_pollution". The image below depicts the numbers that correspond to each pollutant. Those of interest are circled in red.
+```
+```{r prepare_dataset3.1, echo=!failed, dpi = 100, fig.align='center', out.width= '75%', eval=!failed}
+knitr::include_graphics(paste0(pwd,'parameters.png'))
+```
+```{asis prepare_dataset3.2, eval=!failed}
+Dataframe "df_pollution" is subsetted by the notation [(condition), ] to filter all columns from rows that have a value of 1, 8, 9 or 14 in the "parameter" column. This will result in reducing the amount of observations to almost 3M where the "parameter" column can only have one of those four values. 
+
+These values are then transfored into their corresponding string value (see in image above) to better visualize what pollutant the observation refers to. This is done by setting the values of the "parameter" column in "df_pollution" by nesting three ifelse functions mapping each number to its corresponding string by conditions.
+```
+```{r prepare_dataset3.3, echo=!failed, eval=!failed}
+df_pollution <- df_pollution[df_pollution$parameter%in%c(1,8,9,14),]
+df_pollution$parameter <- ifelse(df_pollution$parameter==1, 'SO2', 
+                                 ifelse(df_pollution$parameter==8, 'NO2', 
+                                        ifelse(df_pollution$parameter==9, 'PM2.5', 'O3')))
+```
+```{asis prepare_dataset3.4, eval=!failed}
+The code and its corresponding output below depict the number of rows of the updated dataframe and names of the remaining pollutants.
+```
+```{r prepare_dataset3.5 ,collapse=TRUE, eval=!failed}
+nrow(df_pollution)
+unique(df_pollution$parameter)
+```
+```{asis prepare_dataset3.6, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset4_header, eval=!failed}
+### Transform Hourly Data Into Daily Data
+
+The dataframe "df_pollution" contains observations at an hourly level, however, this report focuses its analysis at a daily level. To transform the dataframe, the "aggregate" function is used to group the observations by specified columns. The passed dataframe into the function is a subset of "df_pollution" containing the column that holds the level of pollution for each hourly observation. The aggregation will group the observations by the parameter label and values in the three date columns, and calculate the mean for each group, returning a dataframe that contains observations for each pollutant by day. The result is stored in a new dataframe, "df_daily_pollution".
+```
+```{r prepare_dataset4.1, echo=!failed, eval=!failed}
+df_daily_pollution <- aggregate(df_pollution[,'value'], FUN = mean, na.rm = TRUE,
+                                by = list(PARAMETER = df_pollution$parameter,
+                                          DAY = df_pollution$day,
+                                          MONTH = df_pollution$month, YEAR = df_pollution$year))
+
+names(df_daily_pollution)[names(df_daily_pollution) == 'x'] <- 'Value'
+```
+```{asis prepare_dataset4.2, eval=!failed}
+The number of rows and structured of "df_daily_pollution" can be seen below.
+```
+```{r prepare_dataset4.3,collapse=TRUE, eval=!failed}
+nrow(df_daily_pollution)
+str(df_daily_pollution)
+```
+```{asis prepare_dataset4.4, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset5_header, eval=!failed}
+### Add Unique Date Identifier
+
+Here, the objective is to create a single "DATE" column with the format YYYY-MM-DD and to remove the individual columns for day, month and year.
+
+To add a unique date identifier the dataframe must be iterated over by row, get the values from the "DAY", "MONTH" and "YEAR" columns, and use them to create a date datatype value that will be assigned into a new column. To do so, the "apply" function is used, which iterates by row when its second parameter is set to "1".
+
+Each row "x" inside the anonymous function is a vector of vectors, where each inside vector corresponds to a column value. Because it corresponds to a column value, the vector comes with a name label and a value. To subset a vector with a name the subsetting notation [ [ ] ] is used. Every iteration subsets the values inside the column vectors of each row to get the values of the day, month and year of the observation. The strings are then concatenated in a specific format, removing whitespaces, and returned as the result of each iteration. The "apply" function returns a vector of dates as strings, which are transformed to the desired date format with the "as.Date" function and assigned to a new column called "DATE" in "df_daily_pollution".
+
+Finally, the original day, month, and year columns are nullified.
+  
+```
+```{r prepare_dataset5.1, echo=!failed, eval=!failed}
+df_daily_pollution$DATE <- as.Date(apply(df_daily_pollution[,c('DAY','MONTH','YEAR')],1,
+                                        function(x){gsub(" ","",paste0(x['YEAR'][[1]],'-',
+                                                                       x['MONTH'][[1]],'-',
+                                                                       x['DAY'][[1]]))}),'%Y-%m-%d')
+df_daily_pollution[,c("DAY", "MONTH", "YEAR")] <- NULL
+```
+```{asis prepare_dataset5.2, eval=!failed}
+Below is the structure of the resultant dataframe.
+```
+```{r prepare_dataset5.3,collapse=TRUE, eval=!failed}
+str(df_daily_pollution)
+```
+```{asis prepare_dataset5.4, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset6_header, eval=!failed}
+### Unmelt Pollution Dataset
+
+To facilitate the processing of the data set in the analysis this report will generate two versions of the same dataset. The first one is in wide format (unmelted), where there is a column for each parameter and the values for one observation corresponds to the level of pollution for each one of those parameters for a specific day. The second one is in long format (melted), where there is only one column for the pollution level values, and multiple observations per day (one for each pollutant).
+```
+```{r prepare_dataset6.1, echo=!failed, eval=!failed}
+final_unmelted_df <- reshape2::dcast(df_daily_pollution, DATE ~ PARAMETER, value.var = "Value")
+```
+```{asis prepare_dataset6.2, eval=!failed}
+"df_daily_pollution" is in long format and is transformed into wide format by using the *dcast* function from the reshape package, which takes a dataframe to unmelt. The values on the left of the ~ indicate the columns that represent the unique identifiers for each row, and the value on the right indicates the column that should be unmelted.
+
+Below are the heads of "df_daily_pollution" from the previous section and "final_unmelted_df", created in this section.
+```
+```{r prepare_dataset6.3,collapse=TRUE, eval=!failed}
+head(df_daily_pollution)
+head(final_unmelted_df)
+```
+```{asis prepare_dataset6.4, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset7_header, eval=!failed}
+### Read and Merge Weather Data
+
+Here, the weather data must be read in and merged with the unmelted dataset from above.
+
+First, the weather data is read in using the present working directory pasted with the filename and it is stored as "df_weather". This is seen in the chunk of code below, as well as the structure of the resultant data frame.
+
+```
+```{r prepare_dataset7.1, echo=!failed, eval=!failed}
+df_weather <- as.data.frame(readxl::read_excel(paste0(pwd,'weather.xlsx')))
+head(df_weather)
+```
+```{asis prepare_dataset7.2, eval=!failed}
+The weather datafile is in wide format, so it will be merged with "final_unmelted_df" as it is, but before some initial transformations are needed. The weather dataframe contains multiple weather parameters, but this report will only use precipitation, average wind speed and average temperature. To filter out columns containing weather parameters "df_weather" is subset with the format [ , (vector)], where the vector containes wanted weather parameters and the "date" column as a unique identifier.
+
+The "date" column is converted from POSIXct format into Date format to be able to merge "df_weather" with "final_unmelted_df" correctly. After merging, "lapply" is used to convert to factor some specified columns and the columns are renamed in order to facillitate the processing of this wide format data frame.
+
+The chunnk of code below depicts these tranformations and outputs the head of the resultant dataframe.
+```
+```{r prepare_dataset7.3, echo=!failed, eval=!failed}
+df_weather <- df_weather[, c('date', 'temp_avg', 'precipitation','wind_avg_speed')]
+df_weather[,'date'] <- as.Date(df_weather[,'date'], format='%Y-%m-%d')
+final_unmelted_df <- merge(final_unmelted_df, df_weather, by.x = "DATE", by.y = "date")
+names(final_unmelted_df) <- c('Date', "NO2", "O3", "PM2.5", "SO2", "Avg_Temperature", "Precipitation", "Avg_Wind_Speed")
+head(final_unmelted_df)
+```
+```{asis prepare_dataset7.4, eval=!failed}
+\
+\
+```
+
+```{asis prepare_dataset8_header, eval=!failed}
+### Melt Dataset
+
+Next, having prepared the unmelted dataframe, a melted version must be created, as it is more friendly for generating plots.
+
+In order melt the dataframe, the "melt" function from the "reshape" package is used. This transformation is seen below, as well as the renaming of the columns, a display of the first six rows of the data frame, and a display of the levels in the "Variable" column. 
+```
+```{r prepare_dataset8.1, echo=!failed, eval=!failed}
+final_melted_df <- melt(final_unmelted_df, id.vars = "Date", na.rm = T)
+names(final_melted_df) <- c('Date', "Variable", "Value")
+head(final_melted_df)
+levels(final_melted_df$Variable)
+```
+```{asis prepare_dataset8.2, eval=!failed}
+<font size="1">
+**Note:** Vectors "pollutants" and "weather" are created to filter out rows or columns from the dataframes when passing in either dataframe "final_unmelted_df" or "final_melted_df" into ggplot or a multi linear regression model. This will enable to compare them together or separately using the same dataframe.
+</font size>
+```
+```{r prepare_dataset8.3,collapse=TRUE, eval=!failed}
+pollutants <- c('NO2','SO2','O3','PM2.5')
+weather <- c("Avg_Temperature", "Precipitation", "Avg_Wind_Speed")
+color <- c("dodgerblue", "tomato", "gold","springgreen2", "dodgerblue4", "tomato4", "goldenrod4")
+```
+```{asis prepare_dataset8.4, eval=!failed}
+\
+\
+```
+
+<!-- PLOTS -->
+```{asis plots_header, eval=!failed}
+## 4 - Data Visualization
+
+This section aims to visualizing the data using the melted version of the dataset created above. It is broken down into the following sections.
+
+  1. Evolution of pollutants over time
+  2. Distribution of pollutants over time
+  3. Evolution of weather over time
+  4. Distribution of weather over time
+```
+
+```{asis plots_1, eval=!failed}
+### 4.1 - Evolution of Pollutants
+
+This section explores the evolution of each of the four pollutants of interest, "NO2", "O3", "PM2.5", and "SO2", from January 2011 until December 2016, using line graphs.
+
+The chunk of code below uses "ggplot" to plot a smoothed line plot of each of the four pollutants over time. Though this does not provide information for specific dates, it gives us an overview of how the pollutants are changing over time. Furthermore, "ggplotly" from the "plotly" package is used as a wrap in order to make the plot interactive. This approach is used in all plots in the Data Visualizing section.
+```
+
+```{r plot1.1, echo=!failed, eval=!failed, fig.align='center', out.width= '100%'}
+ggplotly(ggplot(data=final_melted_df[final_melted_df$Variable%in%pollutants,], aes(x=Date, y=Value, group=Variable, colour=Variable)) + geom_smooth(method='gam', formula=y~s(x,bs="cs")) + xlab("Date")+ylab("Pollution Level") + theme_minimal() + labs(colour='Parameter')+scale_color_manual(values = color[1:4]), tooltip = c('y')) %>% layout(legend = list(orientation = 'h', y = 60)) %>% layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+```
+```{asis plots_1.1, eval=!failed}
+From the plot above, we see:
+
+* **NO2** experiences a drop in its prevelance between the start of 2011 until Q1 of 2016, at which point it rises steeply until the end of 2016. With that said, there is an intermediate peak between 2014 and 2015.
+* **O3**, in contrast, experiences a drop after an initial rise early in 2011, but maintains relatively high levels from late 2013 until early 2016, at which point it drops suddenly.
+* **PM2.5** maintains a relatively stable level throughout the period of the study, with a slight rise from mid- to late-2016.
+* **SO2** begins the period with a drop, which lasts until 2013, at which points it begins rising until 2016, when it plateaus.
+
+Below, we see code meant to develop a plot with much more granular informaiton using the "geom_line" function in "ggplot". Again, the resultant plot is wrapped in "ggplotly" before being output.
+```
+
+```{r plot1.2, echo=!failed, eval=!failed, fig.align='center',out.width= '100%'}
+ggplotly(ggplot(data=final_melted_df[final_melted_df$Variable %in%pollutants,], aes(x=Date, y=Value, group=Variable, colour=Variable)) + geom_line() + xlab("Date") + ylab("Pollution Level") + labs(colour='Parameter') + facet_grid(Variable ~ .) + theme_minimal() +theme(legend.position = "none") + scale_color_manual(values = color[1:4]), tooltip = c('x', 'y')) %>% layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+```
+```{asis plots_1.3, eval=!failed}
+The plot shows:
+* **NO2** has a cyclic nature, rising and falling with the seasons. More specifically, it experiences a rise during winter months and a fall during summer months.
+* **O3** follows a cyclic trend as well, however, the cycles appear to be opposite to those of "NO2". "O3" rises during summer months and falls during winter months.
+* **PM2.5** maintains relative stability throughout the years with peaks that appear to independant of season.
+* **SO2** is cyclic and follows a similar trend to that of "NO2". It rises during winter months and falls during summer ones.
+```
+
+```{asis plots_2, eval=!failed}
+### 4.2 - Evolution of Weather
+
+This section explores the evolution of each of the weather parameters of interest, average temperature, precipitation, and average wind speed, from January 2011 until December 2016, using line graphs.
+
+The chunk of code below uses "ggplot" to plot a smoothed line plot of each of the weather parametrs over time. Though this does not provide information for specific dates, it gives us an overview of how the parameters change over time.
+```
+
+```{r plot2, eval=!failed, fig.align='center', out.width= '100%'}
+ggplotly(ggplot(data=final_melted_df[final_melted_df$Variable%in%weather,], aes(x=Date, y=Value, group=Variable, colour=Variable)) + geom_smooth(method='gam',formula=y~s(x,bs="cs")) + xlab("Date")+ylab("Pollution Level")+ theme_minimal() + labs(colour='Parameter')+scale_color_manual(values = color[5:length(unique(final_melted_df$Variable))]), tooltip = c('y')) %>% layout(legend = list(orientation = 'h', y = 60)) %>% layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+```
+
+
+```{r plot2.2, eval=!failed, fig.align='center',out.width= '100%'}
+ggplotly(ggplot(data=final_melted_df[final_melted_df$Variable %in%weather,], aes(x=Date, y=Value, group=Variable, colour=Variable)) + geom_line() + xlab("Date")+ylab("Pollution Level")+labs(colour='Parameter')+facet_grid(Variable ~ .)+ theme_minimal() + theme(legend.position = "none")+scale_color_manual(values = color[5:length(unique(final_melted_df$Variable))]), tooltip = c('x', 'y')) %>% layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+```
+
+
+```{r plot3, eval=!failed, fig.align='center',out.width= '100%', fig.height=25}
+ggplotly(ggplot(final_melted_df, aes(x = year(Date), y=Value, fill = Variable))+geom_boxplot()+facet_grid(Variable~year(Date), scales = 'free') + theme_minimal() + theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x = element_blank()) + scale_fill_manual(values = color)) %>% layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+```
+
+
+
+<!-- MLR -->
+
+
+```{r regression,  fig.align='center', eval=!failed}
+mlm <- lm(NO2 ~ SO2+O3+PM2.5+Avg_Temperature+Precipitation+Avg_Wind_Speed+Date, final_unmelted_df)
+tab_model(mlm, string.ci = "CI at 95%", title = "Multiple Linear Regression for NO2", string.p = "p-values")
+plot_model(mlm, sort.est = T, show.values = T, value.offset = .3, title = "Coefficient for Independent Variables")
+```
+
+
+#### Residuals
+
+```{r residuals_hist, eval=!failed, fig.align='center',out.width= '100%', fig.height=8}
+
+##https://data.library.virginia.edu/diagnostic-plots/
+
+
+axis_text_size = 8
+mlm_used <- mlm
+
+##Residuals vs Fitted
+pl1 <- qplot(fitted(mlm_used), resid(mlm_used), aes(alpha = 0.1))+geom_hline(yintercept=0, col="red", linetype="dashed")+geom_smooth(method = 'gam', formula =  y ~ s(x, bs = "cs"))+ggtitle("Residual vs Fitted Plot")+xlab('Fitted')+ylab('Residuals') + theme_minimal() + theme(legend.position="none", axis.title = element_text(size = axis_text_size), plot.title = element_text(hjust = 0.5, size = 10, face = "bold"))
+
+##Normal Q-Q
+pl2 <- ggplot(final_unmelted_df, aes(sample = resid(mlm_used), alpha = 0.1)) + geom_qq() + geom_qq_line(col="red", linetype="dashed")+xlab("Theoretical Quantiles")+ylab("Standardized Residuals") + ggtitle("Normal Q-Q") + theme_minimal() + theme(legend.position="none", axis.title = element_text(size = axis_text_size), plot.title = element_text(hjust = 0.5, size = 10, face = "bold"))
+
+##Scale-Location
+pl3 <- ggplot(mlm_used, aes(.fitted, sqrt(abs(.stdresid)), alpha = 0.1)) + geom_point(na.rm=TRUE) + geom_smooth(method="loess", na.rm = TRUE) + xlab("Fitted Value") + ylab(expression(sqrt("|Standardized residuals|"))) + ggtitle("Scale-Location") + theme_minimal() + theme(legend.position="none", axis.title = element_text(size = axis_text_size), plot.title = element_text(hjust = 0.5, size = 10, face = "bold"))
+
+##Residuals vs Leverage
+pl4 <- ggplot(mlm_used, aes(.hat, .stdresid, alpha = 0.1)) + geom_point(aes(size=.cooksd), na.rm=TRUE) + stat_smooth(method="loess", na.rm=TRUE) + xlab("Leverage")+ylab("Standardized Residuals") + ggtitle("Residual vs Leverage Plot") + scale_size_continuous("Cook's Distance", range=c(1,5)) + theme_minimal() + theme(legend.position="none", axis.title = element_text(size = axis_text_size), plot.title = element_text(hjust = 0.5, size = 10, face = "bold"))
+
+pl5 <- qplot(resid(mlm_used), geom = 'density') + geom_histogram(aes(y=..density..), binwidth = 1) + xlab("Residuals") + ylab('Density') + ggtitle("Histogram of Residuals") + geom_density(aes(resid(mlm_used)), fill = 'blue', alpha = 0.1) + theme_minimal() + theme(axis.title = element_text(size = axis_text_size), plot.title = element_text(hjust = 0.5, size = 10, face = "bold"))
+
+pl6 <- ggplot(mlm_used, aes(x = '', y = resid(mlm_used))) + geom_boxplot() + xlab('') + ylab('') + ggtitle("Box Plot of Residuals") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10, face = "bold"))
+
+grid.arrange(pl1, pl2, pl3, pl4, pl5, pl6, ncol=3)
+
+##https://rpubs.com/therimalaya/43190
+
+```
+
+
+```{r fitted, eval=!failed, fig.align='center',out.width= '100%'}
+ggplotly(ggplot() + geom_line(data = final_melted_df[final_melted_df$Variable =='NO2', ], aes(x = Date, y=Value, colour = "Original"),size = 0.3) + geom_line(data = mlm_used, aes(y= mlm_used$fitted.values, x = Date, color = 'Fitted' ), size = 0.1) + theme_minimal() + scale_color_manual(values = c( 'indianred1', 'grey')) + ylab('NO2 Values'), tooltip = c('Value', 'Date'))
+```
